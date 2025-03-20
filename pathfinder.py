@@ -1,5 +1,4 @@
-#TODO Use the Map classes personal (x,y) coordinates that matches array's to help locate node in double array.
-# As node is clicked, update in array too.
+#Added To github!
 
 from maps import *
 
