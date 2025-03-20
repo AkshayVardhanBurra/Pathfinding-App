@@ -107,6 +107,7 @@ while running:
             running = False
         
         if event.type == pygame.MOUSEBUTTONDOWN:
+
             x,y = pygame.mouse.get_pos()
 
             #Find which square
@@ -114,15 +115,20 @@ while running:
 
             if clicked_node != None:
                 print("pos: " + str(clicked_node.pos))
-                d_map.update_coord(clicked_node.pos[0], clicked_node.pos[1], "O")
-                previous_start = start_pos
-                start_pos = clicked_node.pos
-                d_map.__reset__()
-                
-                
-                clicked_node.change_color((255, 0, 0))
-                get_node(previous_start).change_color((0,0,255))
-                has_updated=True
+
+                if pygame.mouse.get_pressed()[0]:
+                    d_map.update_coord(clicked_node.pos[0], clicked_node.pos[1], "O")
+                    previous_start = start_pos
+                    start_pos = clicked_node.pos
+                    d_map.__reset__()
+                    
+                    
+                    clicked_node.change_color((255, 0, 0))
+                    if previous_start[0] != -1:
+                        get_node(previous_start).change_color((0,0,255))
+                    has_updated=True
+                elif pygame.mouse.get_pressed()[1]:
+                    pass
                 
                 print("found node!")
             
@@ -133,10 +139,12 @@ while running:
                 d_map = generate_new_random_map(gen_hw, obstacles)
                 update_nodes(d_map, PygameHelpers.node_groups)
                 print("-----" + str(PygameHelpers.node_groups))
+                start_pos = (-1,-1)
+                previous_start = (-1, -1)
                 has_updated = True
                 trapped=False
         
-            if event.ui_element == shortest_path:
+            if event.ui_element == shortest_path and start_pos[0] != -1:
                 
                 trapped = d_map.find_shortest_path(start_pos, end_pos)
                 
