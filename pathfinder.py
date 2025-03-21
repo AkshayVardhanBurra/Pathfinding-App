@@ -90,7 +90,7 @@ obstacle_ui = pygame_gui.elements.UILabel(obstacle_ui_rect, text = "Obstacles: 4
 
 
 
-obstacle_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=obstacle_rect, value_range=(0,81 - 20), start_value = 0)
+obstacle_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=obstacle_rect, value_range=(0,81 - 20), start_value = 0, manager=manager)
 obstacle_slider.set_current_value(40)
 previous_range = obstacle_slider.value_range
 previous_value = obstacle_slider.get_current_value()
@@ -239,12 +239,17 @@ while running:
                 print(previous_value/previous_range[1])
 
                 print(f" obstacles new range: {obstacle_slider.value_range}, obstacle curr value {obstacles}")
-
+                obstacle_ui.rebuild()
+                obstacle_ui.set_text(f"Obstacles: {obstacles}")
+                size_ui.rebuild()
+                size_ui.set_text(f"Size: {gen_hw} x {gen_hw}")
             if event.ui_element == obstacle_slider:
                 previous_range = obstacle_slider.value_range
                 previous_value = obstacle_slider.get_current_value()
                 obstacles = obstacle_slider.get_current_value()
                 print(f"obstacle curre value: {obstacles}")
+                obstacle_ui.rebuild()
+                obstacle_ui.set_text(f"Obstacles: {obstacles}")
 
                 
 
