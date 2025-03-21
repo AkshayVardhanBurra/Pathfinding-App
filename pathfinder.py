@@ -2,6 +2,8 @@
 
 from maps import *
 
+
+
 #Create a window
 
 # import the pygame module 
@@ -15,8 +17,13 @@ pygame.init()
 # using RGB color coding. 
 background_colour = (234, 212, 252) 
   
-# Define the dimensions of 
-# screen object(width,height) 
+
+
+
+# CONSTANTS ------------------------------------
+
+
+#------------------------------------------------
 
 screen = pygame.display.set_mode((width, height))
 
@@ -72,16 +79,50 @@ shortest_path = pygame_gui.elements.UIButton(relative_rect=hello_rect, text="sho
 hello_rect = pygame.Rect((400,height-150), (100,50))
 clear_path = pygame_gui.elements.UIButton(relative_rect=hello_rect, text="clear path", manager=manager)
 
+slider_rect = pygame.Rect((200, height - 100), (200, 50))
+size_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=slider_rect, value_range=(3,15), start_value=9)
+size_slider.set_current_value(9)
+size_ui_rect = pygame.Rect((50, height - 100), (150,50))
+size_ui = pygame_gui.elements.UILabel(size_ui_rect, text = "Size: 9 x 9")
+obstacle_rect = pygame.Rect((200, height - 50), (200, 50))
+obstacle_ui_rect = pygame.Rect((50, height - 50), (150,50))
+obstacle_ui = pygame_gui.elements.UILabel(obstacle_ui_rect, text = "Obstacles: 40")
+
+
+
+obstacle_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=obstacle_rect, value_range=(0,81 - 20), start_value = 0)
+obstacle_slider.set_current_value(40)
+previous_range = obstacle_slider.value_range
+previous_value = obstacle_slider.get_current_value()
+
 gen_hw =9
 obstacles = 40
-
-previous_start = (0,0)
-start_pos = (0,0)
-end_pos = (gen_hw - 1, gen_hw - 1)
+previous_start = (-1,-1)
+start_pos = (-1,-1)
+previous_end = (-1, -1)
+end_pos = (-1, -1)
 
 setStart = True
+has_cleared = False
 
 #-------------------------------------------------
+
+#Methods------------------------------------------
+
+def reset_clicked_areas():
+    global previous_start
+    global previous_end
+    global start_pos
+    global end_pos
+
+    previous_start = (-1,-1)
+    previous_end = (-1, -1)
+    start_pos = (-1,-1)
+    end_pos = (-1,-1)
+
+def compare_coords(t1, t2):
+    return t1[0] == t2[0] and t1[1] == t2[1]
+       
 
 # game loop 
 while running: 
@@ -112,25 +153,45 @@ while running:
 
             #Find which square
             clicked_node = PygameHelpers.findClickedNode(x,y)
+            
 
             if clicked_node != None:
                 print("pos: " + str(clicked_node.pos))
-
-                if pygame.mouse.get_pressed()[0]:
+                print(clicked_node.color)
+                
+                
+                if pygame.mouse.get_pressed()[0] and not compare_coords(clicked_node.pos,start_pos) and not compare_coords(clicked_node.pos, end_pos):
                     d_map.update_coord(clicked_node.pos[0], clicked_node.pos[1], "O")
                     previous_start = start_pos
                     start_pos = clicked_node.pos
+                    
+                    
+                    
+                    clicked_node.change_color(PygameHelpers.START_COLOR)
+                    if previous_start[0] != -1:
+                        get_node(previous_start).change_color((0,0,200))
+                    has_updated=True
+                    PygameHelpers.reset_colors((0,255,0))
+                    
+                    
+                elif pygame.mouse.get_pressed()[2] and not compare_coords(clicked_node.pos,start_pos) and not compare_coords(clicked_node.pos, end_pos) :
+                    print("right clicked!")
+                    d_map.update_coord(clicked_node.pos[0], clicked_node.pos[1], "O")
+                    previous_end = end_pos
+                    end_pos = clicked_node.pos
                     d_map.__reset__()
                     
                     
-                    clicked_node.change_color((255, 0, 0))
-                    if previous_start[0] != -1:
-                        get_node(previous_start).change_color((0,0,255))
+                    clicked_node.change_color(PygameHelpers.END_COLOR)
+                    if previous_end[0] != -1:
+                        get_node(previous_end).change_color((0,0,200))
                     has_updated=True
-                elif pygame.mouse.get_pressed()[1]:
-                    pass
-                
+                    PygameHelpers.reset_colors((0,255,0))
+                    
+
                 print("found node!")
+
+                
             
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == hello_button:
@@ -139,12 +200,12 @@ while running:
                 d_map = generate_new_random_map(gen_hw, obstacles)
                 update_nodes(d_map, PygameHelpers.node_groups)
                 print("-----" + str(PygameHelpers.node_groups))
-                start_pos = (-1,-1)
-                previous_start = (-1, -1)
+                reset_clicked_areas()
+                
                 has_updated = True
                 trapped=False
         
-            if event.ui_element == shortest_path and start_pos[0] != -1:
+            if event.ui_element == shortest_path and start_pos[0] != -1 and end_pos[0] != -1:
                 
                 trapped = d_map.find_shortest_path(start_pos, end_pos)
                 
@@ -154,15 +215,36 @@ while running:
                     print("trapped!")
                 
                 update_nodes(d_map, PygameHelpers.node_groups)
-                
+                reset_clicked_areas()
                 has_updated = True
 
             
             if event.ui_element == clear_path:
                 d_map.__reset__()
+                reset_clicked_areas()
+                print(start_pos)
+                print(end_pos)
                 update_nodes(d_map, PygameHelpers.node_groups)
                 has_updated = True
+        
+        if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+            if event.ui_element == size_slider:
+                gen_hw = size_slider.get_current_value()
+                PygameHelpers.NODE_SCALER = gen_hw
+                print(size_slider.get_current_value())
+
                 
+                obstacle_slider.value_range = (0, round(0.8 * (gen_hw * gen_hw)))
+                obstacles = round((previous_value/previous_range[1]) * obstacle_slider.value_range[1])
+                print(previous_value/previous_range[1])
+
+                print(f" obstacles new range: {obstacle_slider.value_range}, obstacle curr value {obstacles}")
+
+            if event.ui_element == obstacle_slider:
+                previous_range = obstacle_slider.value_range
+                previous_value = obstacle_slider.get_current_value()
+                obstacles = obstacle_slider.get_current_value()
+                print(f"obstacle curre value: {obstacles}")
 
                 
 

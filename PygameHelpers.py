@@ -2,6 +2,8 @@ import pygame
 
 #Number of nodes
 NODE_SCALER = 9
+START_COLOR = (200,0,0)
+END_COLOR = (200,200,0)
 
 width = 500
 height = 500
@@ -12,6 +14,7 @@ alloted_height = (0.80) * height
 class Node(pygame.sprite.Sprite):
     def __init__(self, color, pos, x,y, w, h):
         super().__init__()
+        self.color = color
         self.pos = pos
         self.image = pygame.Surface((w, h))
         self.image.fill(color)
@@ -20,6 +23,7 @@ class Node(pygame.sprite.Sprite):
         
     
     def change_color(self, color):
+        self.color = color
         self.image.fill(color)
     
 node_groups = []
@@ -68,6 +72,17 @@ def findClickedNode(x, y):
 
 def get_node(pos):
     return node_groups[pos[1]].sprites()[pos[0]]
+
+
+def compare_colors(t1, t2):
+    return t1[0] == t2[0] and t1[1] == t2[1] and t1[2] == t2[2]
+
+
+def reset_colors(p_color):
+    for group in node_groups:
+        for node in group:
+            if compare_colors(node.color, p_color):
+                node.change_color((0,0,200))
 
 
 
